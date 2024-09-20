@@ -33,7 +33,7 @@ def create_refresh_token(data: dict):
 
 def verify_refresh_token(token: str):
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         return username
     except JWTError:
