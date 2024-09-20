@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-# from routers import users, receipts
+
+from app.routers import users, receipts
 
 app = FastAPI(
     title="Receipt API",
@@ -11,8 +12,9 @@ app = FastAPI(
     },
 )
 
-# app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(users.router, prefix="/users", tags=["users"])
 # app.include_router(receipts.router, prefix="/receipts", tags=["receipts"])
+
 
 @app.get("/")
 def read_root():
