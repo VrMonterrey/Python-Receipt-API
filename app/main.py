@@ -13,7 +13,7 @@ app = FastAPI(
 )
 
 app.include_router(users.router, prefix="/users", tags=["users"])
-# app.include_router(receipts.router, prefix="/receipts", tags=["receipts"])
+app.include_router(receipts.router, prefix="/receipts", tags=["receipts"])
 
 
 @app.get("/")
