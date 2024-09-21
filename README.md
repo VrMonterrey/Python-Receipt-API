@@ -48,7 +48,7 @@ Create a `.env` file in the root of the project and set the following environmen
 
 ```env
 SECRET_KEY=your_secret_key
-DATABASE_URL=postgresql://username:password@localhost/receipt_db
+DATABASE_URL=postgresql://username:password@localhost/receipt
 ```
 
 ### 5. Set Up the Database
