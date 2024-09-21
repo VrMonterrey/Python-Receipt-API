@@ -14,8 +14,16 @@ from app.auth import (
 
 router = APIRouter()
 
-
-@router.post("/register", response_model=UserOut)
+@router.post(
+    "/register",
+    response_model=UserOut,
+    summary="Register a new user",
+    description="""
+    Registers a new user account. The user must provide a unique username and a password.
+    \n- If the username is already registered, it returns an error.
+    \n- The password is securely hashed before saving to the database.
+    """
+)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
@@ -28,7 +36,16 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login",
+    response_model=Token,
+    summary="Login a user",
+    description="""
+    Authenticates a user with username and password and returns an access token and a refresh token.
+    \n- Supports both form-encoded and JSON login requests.
+    \n- If the login credentials are incorrect, an error is returned.
+    """
+)
 async def login_user(
     request: Request,
     db: Session = Depends(get_db),
@@ -57,7 +74,16 @@ async def login_user(
     }
 
 
-@router.post("/refresh", response_model=Token)
+@router.post(
+    "/refresh",
+    response_model=Token,
+    summary="Refresh access token",
+    description="""
+    Refreshes the access token using a valid refresh token. 
+    \n- Returns a new access token and the same refresh token.
+    \n- If the refresh token is invalid or the user is not found, an error is returned.
+    """
+)
 def refresh_access_token(refresh_token: str, db: Session = Depends(get_db)):
     username = verify_refresh_token(refresh_token)
     db_user = db.query(User).filter(User.username == username).first()

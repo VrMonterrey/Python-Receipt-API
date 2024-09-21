@@ -3,7 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Receipt, User, Product, receipt_product
-from app.schemas import ReceiptOut, ReceiptFilter, ReceiptCreate, ProductOut
+from app.schemas import ReceiptOut, ProductOut, ReceiptCreate
 from app.auth import get_current_user
 from typing import List, Optional, Literal
 from datetime import datetime, timezone
@@ -11,8 +11,15 @@ from fastapi.responses import PlainTextResponse
 
 router = APIRouter()
 
-
-@router.post("/", response_model=ReceiptOut)
+@router.post(
+    "/",
+    response_model=ReceiptOut,
+    summary="Create a new receipt",
+    description="""
+    Creates a new sales receipt with a list of products and payment details.
+    \nReturns the newly created receipt.
+    """
+)
 def create_receipt(
     receipt: ReceiptCreate,
     db: Session = Depends(get_db),
@@ -66,11 +73,11 @@ def create_receipt(
     product_out = db.execute(
         text(
             """
-        SELECT p.name, p.price, rp.quantity 
-        FROM receipt_product rp
-        JOIN products p ON p.id = rp.product_id
-        WHERE rp.receipt_id = :receipt_id
-    """
+            SELECT p.name, p.price, rp.quantity 
+            FROM receipt_product rp
+            JOIN products p ON p.id = rp.product_id
+            WHERE rp.receipt_id = :receipt_id
+            """
         ),
         {"receipt_id": new_receipt.id},
     ).fetchall()
@@ -92,8 +99,19 @@ def create_receipt(
         }
     }
 
-
-@router.get("/", response_model=List[ReceiptOut])
+@router.get(
+    "/",
+    response_model=List[ReceiptOut],
+    summary="List receipts",
+    description="""
+    List all receipts for the authenticated user, with optional filtering by:
+    \n- `start_date`: Filter receipts starting from this datetime.
+    \n- `end_date`: Filter receipts up to this datetime.
+    \n- `min_total`: Minimum total price of receipts.
+    \n- `payment_type`: Filter by payment type (cash/cashless).
+    \nPagination is supported using `skip` and `limit`.
+    """
+)
 def list_receipts(
     start_date: Optional[datetime] = Query(
         None,
@@ -171,8 +189,15 @@ def list_receipts(
 
     return result
 
-
-@router.get("/{receipt_id}", response_class=PlainTextResponse)
+@router.get(
+    "/{receipt_id}",
+    response_class=PlainTextResponse,
+    summary="Get public receipt",
+    description="""
+    Retrieve a plain text version of a receipt. This endpoint can be accessed by anyone without authentication.
+    Customize the width of each line using the `line_width` parameter.
+    """
+)
 def get_public_receipt(
     receipt_id: int, 
     line_width: int = 30,
