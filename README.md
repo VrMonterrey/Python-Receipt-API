@@ -94,6 +94,7 @@ Here are the key endpoints:
 - **User Login (JWT)**: `POST /users/login/`
 - **Create a Receipt**: `POST /receipts/`
 - **List User Receipts**: `GET /receipts/`
+- **Get Public Receipt**: `GET /receipts/{receipt_id}`
 - **Refresh Access Token**: `POST /users/refresh/`
 
 ### Example Request for Creating a Receipt
