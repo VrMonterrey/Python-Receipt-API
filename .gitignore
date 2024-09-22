@@ -5,3 +5,4 @@ app/__pycache__/
 __pycache__/
 alembic/versions/*.pyc
 alembic/versions/*.pyo
+.pytest_cache/

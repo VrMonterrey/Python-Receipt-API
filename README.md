@@ -151,13 +151,23 @@ Here are the key endpoints:
 
 ## Running Tests
 
+First, set up the database:
+
+```sql
+CREATE DATABASE receipt_test;
+```
+
+Add path to the .env file
+
+```env
+DATABASE_URL_TEST=postgresql://username:password@localhost/receipt_test
+```
+
 To run tests using `pytest`, use the following command:
 
 ```bash
 pytest
 ```
-
-Make sure to have the necessary test setup and database configuration before running the tests.
 
 ## License
 

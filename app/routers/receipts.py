@@ -11,6 +11,7 @@ from fastapi.responses import PlainTextResponse
 
 router = APIRouter()
 
+
 @router.post(
     "/",
     response_model=ReceiptOut,
@@ -18,7 +19,7 @@ router = APIRouter()
     description="""
     Creates a new sales receipt with a list of products and payment details.
     \nReturns the newly created receipt.
-    """
+    """,
 )
 def create_receipt(
     receipt: ReceiptCreate,
@@ -38,7 +39,9 @@ def create_receipt(
         total=total,
         created_at=datetime.now(timezone.utc),
         payment_type=receipt.payment.type,
-        payment_amount=receipt.payment.amount if receipt.payment.type == 'cash' else total,
+        payment_amount=(
+            receipt.payment.amount if receipt.payment.type == "cash" else total
+        ),
         owner=current_user,
     )
 
@@ -96,8 +99,9 @@ def create_receipt(
         "payment": {
             "type": new_receipt.payment_type,
             "amount": new_receipt.payment_amount,
-        }
+        },
     }
+
 
 @router.get(
     "/",
@@ -110,7 +114,7 @@ def create_receipt(
     \n- `min_total`: Minimum total price of receipts.
     \n- `payment_type`: Filter by payment type (cash/cashless).
     \nPagination is supported using `skip` and `limit`.
-    """
+    """,
 )
 def list_receipts(
     start_date: Optional[datetime] = Query(
@@ -189,6 +193,7 @@ def list_receipts(
 
     return result
 
+
 @router.get(
     "/{receipt_id}",
     response_class=PlainTextResponse,
@@ -196,18 +201,16 @@ def list_receipts(
     description="""
     Retrieve a plain text version of a receipt. This endpoint can be accessed by anyone without authentication.
     Customize the width of each line using the `line_width` parameter.
-    """
+    """,
 )
 def get_public_receipt(
-    receipt_id: int, 
-    line_width: int = 30,
-    db: Session = Depends(get_db)
+    receipt_id: int, line_width: int = 30, db: Session = Depends(get_db)
 ):
     receipt = db.query(Receipt).filter(Receipt.id == receipt_id).first()
-    
+
     if not receipt:
         raise HTTPException(status_code=404, detail="Receipt not found")
-    
+
     product_out = db.execute(
         text(
             """
@@ -221,16 +224,18 @@ def get_public_receipt(
     ).fetchall()
 
     receipt_text = build_receipt_text(receipt, product_out, line_width)
-    
+
     return receipt_text
 
 
 def build_receipt_text(receipt: Receipt, product_out: list, line_width: int) -> str:
     receipt_lines = []
 
-    receipt_lines.append(receipt.owner.username.center(line_width))
+    receipt_lines.append(
+        f"{receipt.owner.name} {receipt.owner.surname}".center(line_width)
+    )
     receipt_lines.append("=" * line_width)
-    
+
     for prod in product_out:
         quantity = prod.quantity
         price = prod.price
@@ -241,21 +246,32 @@ def build_receipt_text(receipt: Receipt, product_out: list, line_width: int) -> 
         product_name_str = prod.name
         total_str = f"{total:.2f}"
 
-        receipt_lines.append(product_name_str.ljust(line_width - len(total_str)) + total_str)
+        receipt_lines.append(
+            product_name_str.ljust(line_width - len(total_str)) + total_str
+        )
         receipt_lines.append("-" * line_width)
 
     receipt_lines.append("=" * line_width)
 
     change = receipt.payment_amount - receipt.total
 
-    receipt_lines.append(f"СУМА".ljust(line_width - len(f"{receipt.total:.2f}")) + f"{receipt.total:.2f}")
+    receipt_lines.append(
+        f"СУМА".ljust(line_width - len(f"{receipt.total:.2f}")) + f"{receipt.total:.2f}"
+    )
     payment_type = "Готівка" if receipt.payment_type == "cash" else "Картка"
-    receipt_lines.append(f"{payment_type}".ljust(line_width - len(f"{receipt.payment_amount:.2f}")) + f"{receipt.payment_amount:.2f}")
-    receipt_lines.append(f"Решта".ljust(line_width - len(f"{change:.2f}")) + f"{change:.2f}")
-    
+    receipt_lines.append(
+        f"{payment_type}".ljust(line_width - len(f"{receipt.payment_amount:.2f}"))
+        + f"{receipt.payment_amount:.2f}"
+    )
+    receipt_lines.append(
+        f"Решта".ljust(line_width - len(f"{change:.2f}")) + f"{change:.2f}"
+    )
+
     receipt_lines.append("=" * line_width)
 
-    receipt_lines.append(f"{receipt.created_at.strftime('%d.%m.%Y %H:%M')}".center(line_width))
+    receipt_lines.append(
+        f"{receipt.created_at.strftime('%d.%m.%Y %H:%M')}".center(line_width)
+    )
     receipt_lines.append("Дякуємо за покупку!".center(line_width))
 
     return "\n".join(receipt_lines)
